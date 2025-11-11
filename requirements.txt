@@ -1,5 +1,5 @@
-# Example using pip
-# Uncomment the dependencies you need:
-# numpy==1.26.4
-# requests==2.31.0
+# Python dependencies
+# Add your packages here
+numpy>=1.24.0
+requests>=2.31.0
 

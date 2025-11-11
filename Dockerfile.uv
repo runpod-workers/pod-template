@@ -13,13 +13,14 @@ RUN apt-get update --yes && \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
+# Install uv
+RUN pip install --no-cache-dir uv
+
 # Copy requirements file
 COPY requirements.txt /app/
 
-# Install Python dependencies with pip
-# For uv alternative, see Dockerfile.uv
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies with uv
+RUN uv pip install --system --break-system-packages -r requirements.txt
 
 # Copy application files
 COPY . /app
