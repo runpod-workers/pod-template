@@ -24,6 +24,42 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy application files
 COPY . /app
 
-# Set the default command
-CMD ["python", "main.py"]
+# ============================================================================
+# OPTION 1: Keep everything from base image (Jupyter, SSH, entrypoint) - DEFAULT
+# ============================================================================
+# The base image already provides everything:
+# - Entrypoint: /opt/nvidia/nvidia_entrypoint.sh (handles CUDA setup)
+# - Default CMD: /start.sh (starts Jupyter/SSH automatically based on template settings)
+# - Jupyter Notebook (starts if startJupyter=true in template)
+# - SSH access (starts if startSsh=true in template)
+#
+# Just don't override CMD - the base image handles everything!
+# CMD is not set, so base image default (/start.sh) is used
+
+# ============================================================================
+# OPTION 2: Override CMD but keep entrypoint and services
+# ============================================================================
+# If you want to run your own command but still have Jupyter/SSH start:
+# - Keep the entrypoint (CUDA setup still happens automatically)
+# - Use the provided run.sh script which starts /start.sh in background,
+#   then runs your application commands
+#
+# Edit run.sh to customize what runs after services start, then uncomment:
+# COPY run.sh /app/run.sh
+# RUN chmod +x /app/run.sh
+# CMD ["/app/run.sh"]
+#
+# The run.sh script:
+# 1. Starts /start.sh in background (starts Jupyter/SSH)
+# 2. Waits for services to initialize
+# 3. Runs your application commands
+# 4. Waits for background processes
+
+# ============================================================================
+# OPTION 3: Override everything - no Jupyter, no SSH, just your app
+# ============================================================================
+# If you don't want any base image services, override both entrypoint and CMD:
+#
+# ENTRYPOINT []  # Clear entrypoint
+# CMD ["python", "/app/main.py"]
 
