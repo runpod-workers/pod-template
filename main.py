@@ -27,7 +27,7 @@ def main():
     # ========================================================================
     # USE CASE 1: LOAD MODEL
     # ========================================================================
-    
+
     # MODEL LOADING OPTION 1: From Hugging Face Hub cache (DEFAULT)
     # Use this when: Using transformers pipeline for model baking
     # Behavior: Loads from cache, requires local_files_only=True
