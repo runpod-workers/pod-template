@@ -21,6 +21,24 @@ COPY requirements.txt /app/
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
+# Pre-download and cache the model in the image
+# Using DistilBERT for sentiment classification - small and efficient
+ENV HF_HOME=/app/models
+ENV HF_HUB_ENABLE_HF_TRANSFER=0
+
+# OPTION A: Download via transformers pipeline (automatic)
+RUN python -c "from transformers import pipeline; pipeline('sentiment-analysis', model='distilbert-base-uncased-finetuned-sst-2-english')"
+
+# OPTION B: Download via wget (alternative - useful for custom/hosted models)
+# To use wget instead, uncomment below and disable OPTION A above
+# All files needed: config.json, model.safetensors, tokenizer_config.json, vocab.txt
+# RUN mkdir -p /app/models/distilbert-model && \
+#     cd /app/models/distilbert-model && \
+#     wget -q https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english/resolve/main/config.json && \
+#     wget -q https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english/resolve/main/model.safetensors && \
+#     wget -q https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english/resolve/main/tokenizer_config.json && \
+#     wget -q https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english/resolve/main/vocab.txt
+
 # Copy application files
 COPY . /app
 

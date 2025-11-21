@@ -111,6 +111,34 @@ The Dockerfiles demonstrate three approaches for handling the base image's entry
 - `PYTHONUNBUFFERED=1` ensures Python output is immediately visible in logs
 - The base image entrypoint (`/opt/nvidia/nvidia_entrypoint.sh`) handles CUDA initialization
 
+## Pre-Baked Model
+
+This template includes a pre-downloaded DistilBERT sentiment classification model baked into the Docker image:
+
+- **Model**: `distilbert-base-uncased-finetuned-sst-2-english`
+- **Task**: Sentiment analysis (POSITIVE/NEGATIVE classification)
+- **Size**: ~268MB (small and efficient)
+- **Input**: Plain text strings
+- **Location**: Cached in `/app/models/` within the image
+- **Usage**: Load with `pipeline('sentiment-analysis', model=...)` in Python
+
+The model runs on GPU if available (via CUDA) or falls back to CPU. See `main.py` for example inference code.
+
+### Model Download Methods
+
+**Option A: Automatic (Transformers Pipeline)**
+- Downloads via `transformers` library during build
+- Model cached automatically in `HF_HOME` directory
+- Requires network access during build
+- See commented "OPTION A" in Dockerfile
+
+**Option B: Manual (wget)**
+- Download specific model files directly via `wget`
+- Useful for custom/hosted models or when you need explicit control
+- Set `HF_HOME` to point to downloaded directory
+- See commented "OPTION B" in Dockerfile with example wget commands
+- To use: Uncomment the RUN commands in Dockerfile and update `main.py` to load from local path
+
 ## Customization Points
 
 - **Base Image**: Change `FROM` line to use other Runpod base images
@@ -118,4 +146,5 @@ The Dockerfiles demonstrate three approaches for handling the base image's entry
 - **Python Dependencies**: Update `requirements.txt`
 - **Application Code**: Replace or extend `main.py`
 - **Entry Point**: Modify `CMD` in Dockerfile
+- **Model Selection**: Replace model ID in Dockerfile and main.py to use different Hugging Face models
 
