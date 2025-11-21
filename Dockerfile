@@ -21,17 +21,24 @@ COPY requirements.txt /app/
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
+# ============================================================================
+# USE CASE 1: BAKE MODEL INTO IMAGE
+# ============================================================================
 # Pre-download and cache the model in the image
 # Using DistilBERT for sentiment classification - small and efficient
 ENV HF_HOME=/app/models
 ENV HF_HUB_ENABLE_HF_TRANSFER=0
 
-# OPTION A: Download via transformers pipeline (automatic)
+# MODEL BAKING OPTION 1: Automatic via transformers (DEFAULT)
+# Pros: Simple, clean, automatic caching
+# Cons: Requires network during build
 RUN python -c "from transformers import pipeline; pipeline('sentiment-analysis', model='distilbert-base-uncased-finetuned-sst-2-english')"
 
-# OPTION B: Download via wget (alternative - useful for custom/hosted models)
-# To use wget instead, uncomment below and disable OPTION A above
-# All files needed: config.json, model.safetensors, tokenizer_config.json, vocab.txt
+# MODEL BAKING OPTION 2: Manual via wget (Alternative)
+# Pros: Explicit control, works with custom/hosted models, offline-friendly
+# Cons: Need to manually list all model files
+# To use: Uncomment below and disable MODEL BAKING OPTION 1 above
+# Required files: config.json, model.safetensors, tokenizer_config.json, vocab.txt
 # RUN mkdir -p /app/models/distilbert-model && \
 #     cd /app/models/distilbert-model && \
 #     wget -q https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english/resolve/main/config.json && \
@@ -43,41 +50,34 @@ RUN python -c "from transformers import pipeline; pipeline('sentiment-analysis',
 COPY . /app
 
 # ============================================================================
-# OPTION 1: Keep everything from base image (Jupyter, SSH, entrypoint) - DEFAULT
+# USE CASE 2: SERVICE STARTUP & ENTRYPOINT
 # ============================================================================
-# The base image already provides everything:
-# - Entrypoint: /opt/nvidia/nvidia_entrypoint.sh (handles CUDA setup)
-# - Default CMD: /start.sh (starts Jupyter/SSH automatically based on template settings)
-# - Jupyter Notebook (starts if startJupyter=true in template)
-# - SSH access (starts if startSsh=true in template)
-#
+# Choose how the container starts and what services run
+
+# STARTUP OPTION 1: Keep everything from base image (DEFAULT - Jupyter + SSH)
+# Use this for: Interactive development, remote access, Jupyter notebook
+# Behavior:
+#   - Entrypoint: /opt/nvidia/nvidia_entrypoint.sh (CUDA setup)
+#   - CMD: /start.sh (starts Jupyter/SSH based on template settings)
 # Just don't override CMD - the base image handles everything!
 # CMD is not set, so base image default (/start.sh) is used
 
-# ============================================================================
-# OPTION 2: Override CMD but keep entrypoint and services
-# ============================================================================
-# If you want to run your own command but still have Jupyter/SSH start:
-# - Keep the entrypoint (CUDA setup still happens automatically)
-# - Use the provided run.sh script which starts /start.sh in background,
-#   then runs your application commands
-#
-# Edit run.sh to customize what runs after services start, then uncomment:
+# STARTUP OPTION 2: Run app after services (Jupyter + SSH + Custom app)
+# Use this for: Keep services running + run your application in parallel
+# Behavior:
+#   - Entrypoint: /opt/nvidia/nvidia_entrypoint.sh (CUDA setup)
+#   - CMD: Runs run.sh which starts /start.sh in background, then your app
+# To use: Uncomment below
 # COPY run.sh /app/run.sh
 # RUN chmod +x /app/run.sh
 # CMD ["/app/run.sh"]
-#
-# The run.sh script:
-# 1. Starts /start.sh in background (starts Jupyter/SSH)
-# 2. Waits for services to initialize
-# 3. Runs your application commands
-# 4. Waits for background processes
 
-# ============================================================================
-# OPTION 3: Override everything - no Jupyter, no SSH, just your app
-# ============================================================================
-# If you don't want any base image services, override both entrypoint and CMD:
-#
-# ENTRYPOINT []  # Clear entrypoint
+# STARTUP OPTION 3: Application only (No Jupyter, no SSH)
+# Use this for: Production serverless, minimal overhead, just your app
+# Behavior:
+#   - No Jupyter, no SSH, minimal services
+#   - Direct app execution
+# To use: Uncomment below
+# ENTRYPOINT []
 # CMD ["python", "/app/main.py"]
 

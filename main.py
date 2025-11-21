@@ -24,8 +24,13 @@ def main():
     print("\nLoading sentiment analysis model...")
     device = 0 if torch.cuda.is_available() else -1
 
-    # OPTION A: Load from Hugging Face Hub (uses local cache, no downloads)
-    # local_files_only=True ensures model is loaded from cache, fails if not cached
+    # ========================================================================
+    # USE CASE 1: LOAD MODEL
+    # ========================================================================
+    
+    # MODEL LOADING OPTION 1: From Hugging Face Hub cache (DEFAULT)
+    # Use this when: Using transformers pipeline for model baking
+    # Behavior: Loads from cache, requires local_files_only=True
     classifier = pipeline(
         "sentiment-analysis",
         model="distilbert-base-uncased-finetuned-sst-2-english",
@@ -33,7 +38,10 @@ def main():
         model_kwargs={"local_files_only": True},
     )
 
-    # OPTION B: Load from local path (if you downloaded via wget in Dockerfile)
+    # MODEL LOADING OPTION 2: From local directory (Alternative)
+    # Use this when: Using wget for model baking (uncomment in Dockerfile)
+    # Behavior: Loads directly from /app/models/distilbert-model
+    # To use: Uncomment below and disable MODEL LOADING OPTION 1
     # classifier = pipeline('sentiment-analysis',
     #                       model='/app/models/distilbert-model',
     #                       device=device)
