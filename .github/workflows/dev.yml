@@ -58,7 +58,6 @@ jobs:
           echo "Cleaning up Docker and disk space..."
           docker system prune -af
           docker builder prune -af
-          rm -rf /tmp/*
           df -h
 
       - name: Build and push uv-based image
